@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Play</title>
+    <style type="text/css">
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            max-width: 980px;
+            margin: 0 auto;
+        }
+
+        @media screen and (min-height: 722px) {
+            body {
+                margin-top: 100px;
+            }
+        }
+
+        .url {
+            margin-top: 10px;
+            box-sizing: border-box;
+            width: 100%;
+            font-size: 16px;
+            padding: 10px;
+            border: 1px solid #a7aab5;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<video width="980" height="550" autoplay="autoplay" controls></video>
+<input id="url" class="url" type="text" name="url" placeholder="请输入URL">
+
+<script src="./assets/hls.min.js"></script>
+<script type="text/javascript">
+    // 获取 query 参数
+    function getQueryVariable(variable) {
+        var query = window.location.search.substring(1);
+        var vars = query.split("&");
+        for (var i = 0; i < vars.length; i++) {
+            var pair = vars[i].split("=");
+            if (pair[0] === variable) {
+                return pair[1];
+            }
+        }
+        return "";
+    }
+
+    // 获取 url 地址扩展名
+    function getExtName(address) {
+        var index = address.indexOf("?")
+        if (index >= 0) {
+            address = address.substring(0, index)
+        }
+        index = address.lastIndexOf(".")
+        if (index >= 0) {
+            return address.substring(index + 1)
+        }
+        return ""
+    }
+
+    // 标题
+    var title = decodeURIComponent(getQueryVariable("title"))
+    if (title !== "") {
+        document.title = title
+    }
+
+    // 从 query 获取 url
+    var video = document.getElementsByTagName('video')[0];
+    var queryUrl = decodeURIComponent(getQueryVariable('url'));
+    var hls = null
+    if (Hls.isSupported()) {
+        hls = new Hls();
+        if (queryUrl !== "") {
+            var ext = getExtName(queryUrl)
+            if (ext === "m3u8") {
+                hls.loadSource(queryUrl);
+                hls.attachMedia(video);
+            } else {
+                video.src = queryUrl;
+            }
+        }
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        if (queryUrl !== "") {
+            video.src = queryUrl;
+        }
+    }
+
+    // 从文本框获取 url
+    var url = document.getElementById("url")
+    url.onkeyup = function (event) {
+        if (event.code === "Enter" || event.key === "Enter") {
+            var ext = getExtName(url.value)
+            if (hls !== null) {
+                if (ext === "m3u8") {
+                    hls.loadSource(url.value)
+                    hls.attachMedia(video)
+                } else {
+                    video.src = url.value;
+                }
+            } else {
+                video.src = url.value;
+            }
+        }
+    }
+
+    // 进度、声音控制
+    document.onkeypress = function (event) {
+        if (event.key !== undefined) {
+            if (event.key === "h") {
+                video.currentTime -= 10
+            }
+            if (event.key === "l") {
+                video.currentTime += 10
+            }
+            if (event.key === "j") {
+                video.volume -= 0.1
+            }
+            if (event.key === "k") {
+                video.volume += 0.1
+            }
+        }
+    }
+</script>
+
+</body>
+</html>
