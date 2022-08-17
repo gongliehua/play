@@ -1,7 +1,10 @@
 <?php
     $domain = "";
     $road = isset($_GET["road"]) ? $_GET["road"] : "m3u8";
-    $data = json_decode(file_get_contents("./resource/index.json"), true);
+    $data =  [];
+    if (file_exists("./resource/index.txt")) {
+        $data = explode("\r\n", file_get_contents("./resource/index.txt"));
+    }
 ?>
 <!doctype html>
 <html>
@@ -21,12 +24,22 @@
 <ol>
     <?php
         foreach ($data as $value) {
-            if ($road == "m3u8") {
-                $url = sprintf("%s/play/?url=%s/resource/m3u8/%s/index.m3u8&title=%s", $domain, $domain, $value["sn"], $value["name"]);
-            } else {
-                $url = sprintf("%s/play/?url=%s/resource/mp4/%s.mp4&title=%s", $domain, $domain, $value["sn"], $value["name"]);
+            $value = trim($value);
+            if ($value == "") {
+                continue;
             }
-            printf("<li><a href=\"%s\">%s</a></li>\n\t", $url, $value["name"]);
+            $index = mb_strpos($value, " ");
+            if ($index === false) {
+                continue;
+            }
+            $sn = mb_substr($value, 0, $index);
+            $name = mb_substr($value, $index+1);
+            if ($road == "m3u8") {
+                $url = sprintf("%s/play/?url=%s/resource/m3u8/%s/index.m3u8&title=%s", $domain, $domain, $sn, $name);
+            } else {
+                $url = sprintf("%s/play/?url=%s/resource/mp4/%s.mp4&title=%s", $domain, $domain, $sn, $name);
+            }
+            printf("<li><a href=\"%s\">%s</a></li>\n\t", $url, $name);
         }
     ?>
 </ol>
